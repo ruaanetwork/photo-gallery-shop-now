@@ -1,47 +1,47 @@
 
-import { useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Product } from '@/types';
 import { categories } from '@/data/mockData';
 
 interface ProductFormProps {
-  product?: Product | null;
-  onClose: () => void;
+  product?: Product;
+  onSubmit: (product: Omit<Product, 'id' | 'createdAt'>) => void;
+  onCancel: () => void;
 }
 
-export const ProductForm = ({ product, onClose }: ProductFormProps) => {
+export const ProductForm = ({ product, onSubmit, onCancel }: ProductFormProps) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
-    category: product?.category || categories[0].name,
+    category: product?.category || '',
     tags: product?.tags || [],
-    images: product?.images || [''],
-    inStock: product?.inStock || true,
+    images: product?.images || [],
+    inStock: product?.inStock ?? true,
   });
 
-  const [newTag, setNewTag] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [imageInput, setImageInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Product data:', formData);
-    // Here you would save to your backend/database
-    onClose();
+    onSubmit(formData);
   };
 
   const addTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...prev.tags, tagInput.trim()]
       }));
-      setNewTag('');
+      setTagInput('');
     }
   };
 
@@ -52,171 +52,152 @@ export const ProductForm = ({ product, onClose }: ProductFormProps) => {
     }));
   };
 
-  const addImageUrl = () => {
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, '']
-    }));
+  const addImage = () => {
+    if (imageInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageInput.trim()]
+      }));
+      setImageInput('');
+    }
   };
 
-  const updateImageUrl = (index: number, url: string) => {
+  const removeImage = (imageToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.map((img, i) => i === index ? url : img)
-    }));
-  };
-
-  const removeImageUrl = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter(img => img !== imageToRemove)
     }));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>
-                {product ? 'Edit Product' : 'Add New Product'}
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>{product ? 'Edit Product' : 'Add New Product'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">Product Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="price">Price</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              value={formData.price}
+              onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Add a tag"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              />
+              <Button type="button" onClick={addTag}>Add</Button>
             </div>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Product Name</label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Price ($)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map(tag => (
+                <span key={tag} className="bg-secondary px-2 py-1 rounded text-sm">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="ml-2 text-red-500 hover:text-red-700"
                   >
-                    {categories.map(category => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.inStock}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, inStock: checked }))}
-                  />
-                  <label className="text-sm font-medium">In Stock</label>
+          <div className="space-y-2">
+            <Label>Images</Label>
+            <div className="flex gap-2">
+              <Input
+                value={imageInput}
+                onChange={(e) => setImageInput(e.target.value)}
+                placeholder="Add image URL"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+              />
+              <Button type="button" onClick={addImage}>Add</Button>
+            </div>
+            <div className="space-y-2 mt-2">
+              {formData.images.map((image, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                  <img src={image} alt="" className="w-16 h-16 object-cover rounded" />
+                  <span className="flex-1 text-sm truncate">{image}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(image)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Tags</label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add a tag"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  />
-                  <Button type="button" onClick={addTag}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="gap-1">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-1 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="inStock"
+              checked={formData.inStock}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, inStock: checked }))}
+            />
+            <Label htmlFor="inStock">In Stock</Label>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Product Images</label>
-                <div className="space-y-2">
-                  {formData.images.map((image, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={image}
-                        onChange={(e) => updateImageUrl(index, e.target.value)}
-                        placeholder="Image URL"
-                      />
-                      {formData.images.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeImageUrl(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" onClick={addImageUrl}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Image URL
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-6">
-                <Button type="submit" className="flex-1">
-                  {product ? 'Update Product' : 'Create Product'}
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          <div className="flex gap-4">
+            <Button type="submit" className="flex-1">
+              {product ? 'Update Product' : 'Add Product'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

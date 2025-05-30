@@ -10,7 +10,8 @@ export const Header = () => {
   const { items } = useCart();
   const { user, logout, isAdmin } = useAuth();
   
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Count unique products instead of total quantity
+  const uniqueProductCount = items.length;
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -33,9 +34,9 @@ export const Header = () => {
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
-                {itemCount > 0 && (
+                {uniqueProductCount > 0 && (
                   <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                    {itemCount}
+                    {uniqueProductCount}
                   </Badge>
                 )}
               </Button>
