@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,7 +151,7 @@ export const ProductForm = ({ product, onSubmit, onCancel }: ProductFormProps) =
           </div>
 
           <div className="space-y-2">
-            <Label>Images</Label>
+            <Label>Product Images</Label>
             <div className="flex gap-2">
               <Input
                 value={imageInput}
@@ -162,21 +161,42 @@ export const ProductForm = ({ product, onSubmit, onCancel }: ProductFormProps) =
               />
               <Button type="button" onClick={addImage}>Add</Button>
             </div>
-            <div className="space-y-2 mt-2">
-              {formData.images.map((image, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                  <img src={image} alt="" className="w-16 h-16 object-cover rounded" />
-                  <span className="flex-1 text-sm truncate">{image}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeImage(image)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
+            
+            {/* Enhanced Image Preview Grid */}
+            {formData.images.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Image Preview ({formData.images.length} image{formData.images.length !== 1 ? 's' : ''})</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group border rounded-lg overflow-hidden">
+                      <div className="aspect-square">
+                        <img 
+                          src={image} 
+                          alt={`Product image ${index + 1}`} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder.svg';
+                          }}
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => removeImage(image)}
+                          className="opacity-0 group-hover:opacity-100 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-all"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        {index + 1}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

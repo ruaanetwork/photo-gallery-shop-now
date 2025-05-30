@@ -32,17 +32,27 @@ const Admin = () => {
     setShowForm(true);
   };
 
-  const handleFormClose = () => {
+  const handleFormSubmit = (productData: Omit<Product, 'id' | 'createdAt'>) => {
+    console.log('Product submitted:', productData);
+    // TODO: Implement actual product save logic
+    setShowForm(false);
+    setEditingProduct(null);
+  };
+
+  const handleFormCancel = () => {
     setShowForm(false);
     setEditingProduct(null);
   };
 
   if (showForm) {
     return (
-      <ProductForm 
-        product={editingProduct} 
-        onClose={handleFormClose}
-      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <ProductForm 
+          product={editingProduct || undefined} 
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+        />
+      </div>
     );
   }
 
@@ -61,11 +71,18 @@ const Admin = () => {
           {products.map(product => (
             <Card key={product.id}>
               <CardHeader>
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-md"
-                />
+                <div className="relative">
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded-md"
+                  />
+                  {product.images.length > 1 && (
+                    <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                      +{product.images.length - 1} more
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <CardTitle className="mb-2">{product.name}</CardTitle>
